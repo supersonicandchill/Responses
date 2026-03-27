@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -288,7 +289,7 @@
                                     <button onclick="moveTask(${tab.id}, ${task.id}, 1)" class="w-8 h-8 flex items-center justify-center hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-white">
                                         <i class="fas fa-chevron-down"></i>
                                     </button>
-                                    <button onclick="deleteTask(${tab.id}, ${task.id})" class="w-8 h-8 flex items-center justify-center hover:bg-red-950 rounded-xl text-zinc-400 hover:text-red-400">
+                                    <button onclick="armDelete(this, ${tab.id}, ${task.id})" title="Double-click to delete" class="delete-btn w-8 h-8 flex items-center justify-center rounded-xl text-zinc-400 hover:text-red-400 transition-all">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -305,6 +306,8 @@
             }
 
             content.innerHTML = html;
+            armedBtn = null;
+            if (armedTimer) { clearTimeout(armedTimer); armedTimer = null; }
         }
 
         function changePriority(tabId, taskId, e) {
@@ -356,6 +359,36 @@
                 closeModal();
                 renderCurrentTab();
             }
+        }
+
+        let armedBtn = null;
+        let armedTimer = null;
+
+        function armDelete(btn, tabId, taskId) {
+            // If this button is already armed, treat second click as confirm
+            if (armedBtn === btn) {
+                clearTimeout(armedTimer);
+                armedBtn = null;
+                deleteTask(tabId, taskId);
+                return;
+            }
+            // Disarm any previously armed button
+            if (armedBtn) disarmDelete(armedBtn);
+
+            // Arm this button
+            armedBtn = btn;
+            btn.classList.add('bg-red-500/20', 'text-red-400', 'ring-1', 'ring-red-500');
+            btn.title = 'Click again to confirm delete';
+
+            armedTimer = setTimeout(() => {
+                disarmDelete(btn);
+                armedBtn = null;
+            }, 2500);
+        }
+
+        function disarmDelete(btn) {
+            btn.classList.remove('bg-red-500/20', 'text-red-400', 'ring-1', 'ring-red-500');
+            btn.title = 'Double-click to delete';
         }
 
         function deleteTask(tabId, taskId) {
